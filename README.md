@@ -1,78 +1,77 @@
-# CV jako kod
+# CV as Code
 
-React + dane w JSON → PDF z prawdziwym tekstem (ATS-friendly) + automatyczne sprawdzenie, czy parser odczyta go poprawnie.
+React + JSON data → ATS-friendly PDF with real text, plus automatic checks that parsers can read it correctly.
 
-## Start (raz)
+## Setup (once)
 
 ```bash
 npm install
 npx playwright install chromium
 ```
 
-## Codzienna praca
+## Day-to-day workflow
 
 ```bash
-npm run dev      # podgląd na żywo (http://localhost:5173), zmiany w plikach CV widać od razu
-npm run cv       # build + PDF w out/cv.en.pdf + testy tekstu (PASS / WARN / FAIL)
+npm run dev      # live preview (http://localhost:5173); CV file changes show up immediately
+npm run cv       # build + PDF to out/cv.en.pdf + text-layer checks (PASS / WARN / FAIL)
 ```
 
-Każdy wariant CV istnieje osobno dla każdego języka: `<wariant>.<pl|en>.json`. Bazowe CV to `cv.en.json` (domyślne) i `cv.pl.json`; oba są chronione przed usunięciem.
+Each CV variant exists per language as `<variant>.<pl|en>.json`. The base CVs are `cv.en.json` (default) and `cv.pl.json`; both are protected from deletion.
 
-### Twoje dane vs przykład
+### Your data vs the sample
 
-- `examples/` - przykładowe, fikcyjne CV (John Smith po angielsku, Jan Kowalski po polsku), które są w repo. Tylko do odczytu.
-- `data/` - **Twoje** CV. Folder jest w `.gitignore`, więc Twoje dane nigdy nie trafią do commita.
-- Aplikacja i skrypty szukają wariantu najpierw w `data/`, potem w `examples/`. Zapis z paska zawsze idzie do `data/`, więc wystarczy otworzyć przykład, edytować i kliknąć **Save**, żeby mieć własną kopię. Własne zdjęcia lądują w `public/photos/` (też ignorowane).
+- `examples/` — fictional sample CVs shipped with the repo (John Smith in English, Jan Kowalski in Polish). Read-only.
+- `data/` — **your** CV. This folder is in `.gitignore`, so your data never gets committed.
+- The app and scripts look up a variant in `data/` first, then `examples/`. Saving from the toolbar always writes to `data/`, so open a sample, edit it, and click **Save** to get your own copy. Uploaded photos land in `public/photos/` (also gitignored).
 
 ```bash
-npm run cv -- --data cv.pl     # jedna wersja -> out/cv.pl.pdf
-npm run cv:all                 # wszystkie wersje z data/
+npm run cv -- --data cv.pl     # one variant → out/cv.pl.pdf
+npm run cv:all                 # every variant in data/ and examples/
 ```
 
-W podglądzie wersję wybierasz przez `?data=cv.pl` w adresie albo z paska.
+In the preview, pick a variant via `?data=cv.pl` in the URL or from the toolbar.
 
-W prawym górnym rogu podglądu (tylko `npm run dev`) jest pływający, przeciągalny pasek:
+While running `npm run dev`, a floating, draggable toolbar appears in the top-right corner:
 
-- **menu pliku** (`cv ▾`) - lista wariantów w bieżącym języku do przełączania, **Duplikuj jako…** (kopia bieżącego stanu pod nową nazwą, w tym samym języku, nigdy nie nadpisuje istniejącego pliku) i **Usuń** (usuwa wersję w bieżącym języku; bazowe `cv` jest chronione),
-- **Podgląd | Edycja** - w trybie edycji każdy tekst jest edytowalny (klik i pisz), bullet/projekt/firmę/wpis edukacji/grupę skilli/akapit przesuniesz strzałkami **↑ ↓**, usuniesz **×** i dodasz przyciskiem "+ …" (nowy element ma styl swojej sekcji, a jego tekst jest od razu zaznaczony do nadpisania; stanowiska, projekty i edukacja trafiają na górę listy, bo są od najnowszych), daty zmieniasz polami miesiąca. W podglądzie strona wygląda dokładnie jak zwykłe CV,
-- **PL | EN** - pokazuje ten sam wariant w drugim języku. Jeśli tej wersji jeszcze nie ma, pasek proponuje ją utworzyć: kopia obecnej treści z nagłówkami sekcji i formatem dat drugiego języka, do przetłumaczenia w trybie edycji,
-- **Cofnij** / **Ctrl+Z** (tylko w edycji) - cofa ostatnią zmianę: edycję tekstu, dodanie, usunięcie lub przesunięcie elementu, zmianę daty (do 100 kroków wstecz). W trakcie pisania w polu Ctrl+Z cofa samo pisanie, jak zwykle w przeglądarce,
-- **Zapisz** (tylko w edycji) - zapisuje zmiany do otwartego wariantu; czerwona kropka = niezapisane zmiany (gaśnie też, gdy cofniesz wszystko do zapisanej wersji),
-- **flaga** (na końcu paska) - pokazuje język, na który przełączysz interfejs (pasek, menu, przyciski edycji): 🇵🇱 gdy jest angielski, 🇬🇧 gdy polski. Niezależna od języka treści CV. Wybór zapamiętuje przeglądarka; domyślnie angielski,
-- **PDF** - świeży PDF wyrenderowany tą samą logiką co `npm run cv` (bez okna drukowania, bez przebudowy). Powstaje z zapisanego pliku, więc przy niezapisanych zmianach pasek o tym ostrzega.
+- **file menu** (`cv ▾`) — list of variants in the current language, **Duplicate as…** (copy the current state under a new name in the same language; never overwrites an existing file), and **Delete** (removes the version in the current language; the base `cv` variant is protected),
+- **Preview | Edit** — in edit mode every text field is editable (click and type). Move bullets, projects, employers, education entries, skill groups, or paragraphs with **↑ ↓**, remove with **×**, and add with "+ …" (new items inherit their section’s style and arrive with text selected for immediate typing; jobs, projects, and education are inserted at the top because lists are newest-first). Dates are edited with month pickers. In preview mode the page looks exactly like the printed CV,
+- **PL | EN** — open the same variant in the other language. If that version does not exist yet, the toolbar offers to create it: a copy of the current content with the target language’s section headings and date format, ready to translate in edit mode,
+- **Undo** / **Ctrl+Z** (edit mode only) — reverts the last change: text edit, add, remove, reorder, or date change (up to 100 steps). While typing inside a field, Ctrl+Z uses the browser’s normal text undo,
+- **Save** (edit mode only) — writes changes to the open variant; a red dot means unsaved changes (it clears when you undo back to the saved state),
+- **flag** (end of the toolbar) — switches the **interface** language (toolbar, menus, edit controls): 🇵🇱 when English is active, 🇬🇧 when Polish is active. Independent of the CV content language. The choice is stored in the browser; English is the default,
+- **PDF** — a fresh PDF rendered with the same logic as `npm run cv` (no print dialog, no rebuild). It uses the saved file on disk, so the toolbar warns if you have unsaved changes.
 
-## Gdzie co jest
+## Project layout
 
-| Plik | Po co |
+| File | Purpose |
 |---|---|
-| `data/*.json` | Twoja treść CV, jeden plik = jedna wersja (ignorowane przez git) |
-| `examples/*.json` | przykładowe, fikcyjne CV w repo |
-| `scripts/data-files.mjs` | gdzie szukać pliku wariantu: najpierw `data/`, potem `examples/` |
-| `src/App.tsx` | struktura i kolejność tekstu w PDF |
-| `src/styles.css` | wygląd, marginesy A4, łamanie stron |
-| `src/types.ts` | kształt danych |
-| `scripts/render-pdf.mjs` | Chromium → PDF (CLI, zapisuje do pliku) |
-| `scripts/pdf-renderer.mjs` | wspólna logika renderowania - używana przez CLI i przycisk pobierania w `npm run dev` (`vite.config.ts`) |
-| `scripts/check-pdf.mjs` | testy „jak widzi to ATS” |
-| `.cursor/rules/cv.mdc` | zasady dla Cursora (żeby nie psuł struktury) |
+| `data/*.json` | Your CV content, one file per variant (gitignored) |
+| `examples/*.json` | Fictional sample CVs in the repo |
+| `scripts/data-files.mjs` | Resolves a variant: `data/` first, then `examples/` |
+| `src/App.tsx` | CV structure and text order for PDF/ATS |
+| `src/styles.css` | Layout, A4 margins, page breaks |
+| `src/types.ts` | Data shape |
+| `scripts/render-pdf.mjs` | Chromium → PDF file (CLI) |
+| `scripts/pdf-renderer.mjs` | Shared render logic — CLI and dev download button (`vite.config.ts`) |
+| `scripts/check-pdf.mjs` | “How an ATS sees it” text-layer checks |
 
-## Zdjęcie
+## Photo
 
-Najprościej w trybie edycji: najedź na zdjęcie i kliknij **Change photo / Zmień zdjęcie** (albo **Add photo**, gdy go nie ma). Akceptowane są JPEG, PNG i WebP do 10 MB. Plik trafia do `public/photos/` pod nazwą z hasha treści, a ścieżka do `profile.photo`; zapisz CV, żeby zmiana została.
+Easiest in edit mode: hover the photo and click **Change photo** (or **Add photo** if there is none). JPEG, PNG, and WebP up to 10 MB are accepted. The file is stored in `public/photos/` under a content-hash name and referenced from `profile.photo`; save the CV to persist the change.
 
-Ręcznie: wrzuć plik do `public/photos/` i w JSON ustaw np. `"photo": "./photos/moje-zdjecie.jpg"`.
-(Zdjęcie jest opcjonalne; nie wpływa na tekst w PDF.)
+Manually: drop a file into `public/photos/` and set e.g. `"photo": "./photos/my-photo.jpg"` in the JSON.
+(Photo is optional; it does not affect the PDF text layer.)
 
-## Co sprawdza `npm run cv`
+## What `npm run cv` checks
 
-Nazwisko jako pierwsza linia tekstu, nagłówki Skills / Experience / Education w kolejności, e-mail i telefon,
-każda firma + rola + data startu, kolejność firm, kompletność każdego punktu (wykrywa ucięty tekst),
-brak ligatur i dziwnych znaków, brak łamania linii po dywizie, liczba stron, brak „osieroconego” nagłówka na dole strony.
-**FAIL** = popraw przed wysłaniem CV. **WARN** = zerknij.
+Last name as the first line of text; section headings Skills / Experience / Education in order; email and phone;
+each employer + role + start date; employer order; completeness of every bullet (detects truncated text);
+no ligatures or odd characters; no line breaks after hyphens; page count; no orphaned section heading at the bottom of a page.
+**FAIL** = fix before sending the CV. **WARN** = worth a look.
 
-## Zasady
+## Rules
 
-- Treść tylko w `data/`, nie w komponentach.
-- Jedna kolumna, bez tabel i pól tekstowych, bez `text-transform` na imieniu i `letter-spacing`.
-- Projekty zagnieżdżone pod pracodawcą, nie jako osobne „firmy”.
-- Po zmianach zawsze otwórz PDF i obejrzyj łamanie stron.
+- Content lives only in JSON (`data/` or `examples/`), not in components.
+- Single column, no tables or form fields, no `text-transform` on the name, no `letter-spacing`.
+- Projects nested under the employer, not as separate “companies”.
+- After changes, always open the PDF and check page breaks.

@@ -82,6 +82,6 @@ export interface CV {
   education: Education[];
   languages: string[];
   interests: string;
-  /** GDPR / RODO clause, printed once at the very end */
+  /** GDPR consent clause, printed once at the very end */
   consent: string;
 }

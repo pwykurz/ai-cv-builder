@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { CV, Education, Job, Labels, Project } from './types';
 import { formatRange } from './lib/dates';
 import {
@@ -308,13 +308,15 @@ export default function App() {
     setCvState(next);
   };
 
-  const undo = () => {
-    const prev = history.at(-1);
-    if (!prev) return;
-    cvRef.current = prev;
-    setHistory(history.slice(0, -1));
-    setCvState(prev);
-  };
+  const undo = useCallback(() => {
+    setHistory((h) => {
+      const prev = h.at(-1);
+      if (!prev) return h;
+      cvRef.current = prev;
+      setCvState(prev);
+      return h.slice(0, -1);
+    });
+  }, []);
 
   // Ctrl/Cmd+Z undoes the last committed change (edit or removal). While the cursor is inside a
   // field that's being typed in, the browser's own undo for that text takes precedence.
@@ -329,7 +331,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  });
+  }, [editMode, undo]);
 
   useEffect(() => {
     document.title = `${profile.name} – CV`;

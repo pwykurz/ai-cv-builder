@@ -12,8 +12,8 @@ const SAFE_NAME = /^[\w.-]+$/;
 const DEFAULT_VARIANT = 'cv.en';
 const PROTECTED_VARIANTS = ['cv.pl', 'cv.en'];
 
-// Dev-server-only endpoint for the in-page "download PDF" button (see DownloadButton in
-// src/App.tsx). Renders a fresh PDF from the *running* dev server on every request, using the
+// Dev-server-only endpoint for the in-page "download PDF" button (see Toolbar in
+// src/editing.tsx). Renders a fresh PDF from the *running* dev server on every request, using the
 // same Playwright logic as `npm run cv` (scripts/pdf-renderer.mjs) - so it always reflects the
 // current data/*.json, not whatever was last built. Only registered under `vite dev`
 // (configureServer never runs during `vite build`).

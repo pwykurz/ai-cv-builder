@@ -184,7 +184,7 @@ export function focusOnMount(placeholder: string) {
 }
 
 /**
- * "+ Dodaj …" control, only rendered in edit mode (hidden in print). Lives at the end (or, for
+ * "+ …" add control, only rendered in edit mode (hidden in print). Lives at the end (or, for
  * dated lists that are newest-first, the start) of the list it adds to.
  */
 export function AddButton({
@@ -245,7 +245,7 @@ export function Editable({
     const selection = window.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(range);
-  }, [value]);
+  }, [editMode, value]);
 
   return (
     <Tag
@@ -656,7 +656,7 @@ function FileMenu({
 
   useEffect(() => {
     if (dupName !== null) dupInputRef.current?.select();
-  }, [dupName !== null]);
+  }, [dupName]);
 
   const switchTo = (name: string) => {
     if (name === dataName) return close();
@@ -689,7 +689,7 @@ function FileMenu({
     try {
       const res = await fetch(`/__delete-cv?data=${encodeURIComponent(dataName)}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
-      goTo(variantName(BASE_VARIANT, lang ?? 'pl'));
+      goTo(variantName(BASE_VARIANT, lang ?? 'en'));
     } catch (err) {
       setBusy(false);
       setError(errorText(err));

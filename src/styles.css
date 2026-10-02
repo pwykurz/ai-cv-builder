@@ -46,7 +46,7 @@ body {
 /* ---------- Editor toolbar (screen-only dev tooling, see src/editing.tsx) ---------- */
 /* Fixed (not tied to .page), so it stays put while scrolling a long, multi-page CV. Hidden
    below under @media print so none of this ever reaches the printed page or exported PDF.
-   Layout: [handle] [file menu] | [Podgląd|Edycja] | [Zapisz] [PDF] - only PDF is filled. */
+   Layout: [handle] [file menu] | [Preview|Edit] | [Save] [PDF] - only PDF is filled. */
 .toolbar {
   --tb-hover: #f1f3f5;
   position: fixed;
@@ -405,7 +405,7 @@ a {
   cursor: default;
 }
 
-/* "+ Dodaj …" - quiet dashed chip so it reads as a slot for new content, not as CV text. */
+/* "+ …" add buttons — quiet dashed chip so they read as slots for new content, not as CV text. */
 .add-btn {
   display: inline-flex;
   align-items: center;
