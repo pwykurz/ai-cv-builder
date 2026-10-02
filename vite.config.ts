@@ -140,7 +140,10 @@ function deleteCvPlugin(): Plugin {
 const PHOTO_TYPES: Record<string, { ext: string; magic: (b: Buffer) => boolean }> = {
   'image/jpeg': { ext: 'jpg', magic: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
   'image/png': { ext: 'png', magic: (b) => b.subarray(0, 4).toString('hex') === '89504e47' },
-  'image/webp': { ext: 'webp', magic: (b) => b.subarray(0, 4).toString() === 'RIFF' && b.subarray(8, 12).toString() === 'WEBP' },
+  'image/webp': {
+    ext: 'webp',
+    magic: (b) => b.subarray(0, 4).toString() === 'RIFF' && b.subarray(8, 12).toString() === 'WEBP',
+  },
 };
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 

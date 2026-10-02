@@ -64,7 +64,10 @@ for (let i = 1; i <= doc.numPages; i++) {
   pages.push(text);
 }
 const fullText = pages.join('\n');
-const lines = fullText.split('\n').map((l) => l.trim()).filter(Boolean);
+const lines = fullText
+  .split('\n')
+  .map((l) => l.trim())
+  .filter(Boolean);
 const flat = norm(fullText);
 const meta = await doc.getMetadata();
 
@@ -78,11 +81,7 @@ check('error', fullText.replace(/\s/g, '').length > 800, 'PDF has a real text la
 check('warn', doc.numPages <= maxPages, `Page count ${doc.numPages} (max ${maxPages})`);
 
 // The first thing a parser sees should be the candidate's name.
-check(
-  'error',
-  norm(lines[0] ?? '') === norm(profile.name),
-  `First line of text is the name (got: "${lines[0]}")`,
-);
+check('error', norm(lines[0] ?? '') === norm(profile.name), `First line of text is the name (got: "${lines[0]}")`);
 
 // Standard section headings, on their own line, in the expected order.
 const headingLine = (label) => lines.findIndex((l) => l.toLowerCase() === label.toLowerCase());
@@ -126,15 +125,26 @@ const sentences = [
   ]),
 ].filter(Boolean);
 for (const s of sentences) if (!flat.includes(norm(s))) missing.push(s.slice(0, 70));
-check('error', missing.length === 0, `All ${sentences.length} summary/bullet texts are present and complete${missing.length ? `. Missing: ${missing.join(' | ')}` : ''}`);
+check(
+  'error',
+  missing.length === 0,
+  `All ${sentences.length} summary/bullet texts are present and complete${missing.length ? `. Missing: ${missing.join(' | ')}` : ''}`,
+);
 
 const techMissing = [];
 const techLists = [
   ...cv.skills.map((g) => g.items.join(', ')),
-  ...cv.experience.flatMap((j) => [j.tech, ...(j.projects ?? []).map((p) => p.tech)]).filter(Boolean).map((t) => t.join(', ')),
+  ...cv.experience
+    .flatMap((j) => [j.tech, ...(j.projects ?? []).map((p) => p.tech)])
+    .filter(Boolean)
+    .map((t) => t.join(', ')),
 ];
 for (const t of techLists) if (!flat.includes(norm(t))) techMissing.push(t.slice(0, 60));
-check('error', techMissing.length === 0, `All skill/tech lists are complete${techMissing.length ? `. Missing: ${techMissing.join(' | ')}` : ''}`);
+check(
+  'error',
+  techMissing.length === 0,
+  `All skill/tech lists are complete${techMissing.length ? `. Missing: ${techMissing.join(' | ')}` : ''}`,
+);
 
 // Odd glyphs: ligatures, replacement characters, private-use area.
 const odd = fullText.match(/[ﬀ-ﬆ�-]/g);
@@ -142,7 +152,11 @@ check('error', !odd, `No ligature / replacement / private-use characters${odd ? 
 
 // A line that ends with a hyphen can be glued together by an extractor ("e-commerce" -> "ecommerce").
 const hyphenEnds = lines.filter((l) => /[A-Za-z0-9]-$/.test(l));
-check('warn', hyphenEnds.length === 0, `No line ends with a hyphen${hyphenEnds.length ? `: ${hyphenEnds.slice(0, 3).join(' | ')}` : ''}`);
+check(
+  'warn',
+  hyphenEnds.length === 0,
+  `No line ends with a hyphen${hyphenEnds.length ? `: ${hyphenEnds.slice(0, 3).join(' | ')}` : ''}`,
+);
 
 // Hyphenated words must stay in one piece.
 const textFields = [
@@ -153,20 +167,34 @@ const textFields = [
 ].filter(Boolean);
 const hyphenated = [...new Set(textFields.flatMap((s) => s.match(/[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+/g) ?? []))];
 const splitWords = hyphenated.filter((w) => !flat.includes(norm(w)));
-check('warn', splitWords.length === 0, `Hyphenated words intact${splitWords.length ? `: ${splitWords.join(', ')}` : ''}`);
+check(
+  'warn',
+  splitWords.length === 0,
+  `Hyphenated words intact${splitWords.length ? `: ${splitWords.join(', ')}` : ''}`,
+);
 
 // Layout sanity: no heading stranded at the bottom of a page, no near-empty last page.
 const strandedAtBottom = [];
 pages.forEach((text, i) => {
-  const pageLines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  const pageLines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
   const tail = pageLines.at(-1) ?? '';
   if (order.concat(labels.languages, labels.interests).some((h) => h.toLowerCase() === tail.toLowerCase())) {
     strandedAtBottom.push(`page ${i + 1}: "${tail}"`);
   }
 });
-check('warn', strandedAtBottom.length === 0, `No section heading stranded at the bottom of a page${strandedAtBottom.length ? ` (${strandedAtBottom.join(', ')})` : ''}`);
+check(
+  'warn',
+  strandedAtBottom.length === 0,
+  `No section heading stranded at the bottom of a page${strandedAtBottom.length ? ` (${strandedAtBottom.join(', ')})` : ''}`,
+);
 
-const lastPageLines = pages.at(-1).split('\n').filter((l) => l.trim()).length;
+const lastPageLines = pages
+  .at(-1)
+  .split('\n')
+  .filter((l) => l.trim()).length;
 check('warn', pages.length === 1 || lastPageLines >= 8, `Last page is not nearly empty (${lastPageLines} text lines)`);
 
 check('warn', Boolean(meta.info?.Title), `PDF title metadata is set (${meta.info?.Title ?? 'none'})`);

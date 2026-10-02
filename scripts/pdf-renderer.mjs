@@ -17,7 +17,8 @@ export async function renderPdfBuffer(url) {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle' });
     await page.waitForSelector('main.page');
-    await page.evaluate(() => document.fonts.ready);
+    // Runs in the browser page context, not Node.
+    await page.evaluate(() => globalThis.document.fonts.ready);
     await page.emulateMedia({ media: 'print' });
 
     return await page.pdf({

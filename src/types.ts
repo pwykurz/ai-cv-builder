@@ -1,5 +1,7 @@
 /** Dates are "YYYY-MM" (formatted as "Jun 2021") or "YYYY" (kept as is). `null` end = still ongoing. */
 export interface Project {
+  /** Stable React key; assigned on load if missing, persisted when saved. */
+  id?: string;
   name: string;
   /** Client or context, rendered after the name: "Insight Dashboard – retail analytics platform" */
   client?: string;
@@ -12,6 +14,7 @@ export interface Project {
 }
 
 export interface Job {
+  id?: string;
   role: string;
   company: string;
   start: string;
@@ -27,11 +30,13 @@ export interface Job {
 }
 
 export interface SkillGroup {
+  id?: string;
   label: string;
   items: string[];
 }
 
 export interface Education {
+  id?: string;
   degree: string;
   school: string;
   /** "YYYY-MM" format, same as Job/Project dates */

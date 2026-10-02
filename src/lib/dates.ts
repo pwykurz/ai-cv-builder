@@ -6,12 +6,7 @@ export function formatDate(value: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(date);
 }
 
-export function formatRange(
-  start: string,
-  end: string | null,
-  locale: string,
-  presentLabel: string,
-): string {
+export function formatRange(start: string, end: string | null, locale: string, presentLabel: string): string {
   const to = end ? formatDate(end, locale) : presentLabel;
   return `${formatDate(start, locale)} – ${to}`;
 }
