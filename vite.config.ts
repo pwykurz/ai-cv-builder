@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import { detectKind, importCv, isImportAvailable } from './scripts/cv-import.mjs';
 import { renderPdfBuffer } from './scripts/pdf-renderer.mjs';
 
 const SAFE_NAME = /^[\w.-]+$/;
@@ -11,6 +12,57 @@ const SAFE_NAME = /^[\w.-]+$/;
 // language always has something to fall back to.
 const DEFAULT_VARIANT = 'cv.en';
 const PROTECTED_VARIANTS = ['cv.pl', 'cv.en'];
+
+// Two guards for the dev server, which holds the API key and can write to data/.
+// 1. Secrets must never be VITE_-prefixed: Vite bundles those into the browser code. The key is
+//    read by the dev server only, as ANTHROPIC_API_KEY - so refuse to start if a secret-looking
+//    VITE_ variable exists.
+// 2. State-changing endpoints (/__save-cv, /__upload-photo, /__import-cv, ...) only accept requests
+//    from this very page. Without it, any website open in your browser could POST to
+//    localhost:5173 and spend your API key or overwrite data/ (a cross-site "simple" request is sent
+//    even though the page can't read the reply). Browsers always send Origin on POST/DELETE; tools
+//    like curl send neither Origin nor Sec-Fetch-Site and are let through.
+function securityGuardPlugin(): Plugin {
+  return {
+    name: 'cv-security-guard',
+    config(_, { mode }) {
+      const exposed = Object.keys(loadEnv(mode, import.meta.dirname, 'VITE_')).filter((name) =>
+        /ANTHROPIC|SECRET|TOKEN|API_?KEY/i.test(name),
+      );
+      if (exposed.length > 0) {
+        throw new Error(
+          `${exposed.join(', ')} would be bundled into the browser code (VITE_ prefix) and leak. ` +
+            'Rename it to ANTHROPIC_API_KEY (no VITE_ prefix): only the dev server reads that one.',
+        );
+      }
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const mutating = req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS';
+        if (!req.url?.startsWith('/__') || !mutating) {
+          next();
+          return;
+        }
+        const { origin } = req.headers;
+        const sameOrigin = origin
+          ? (() => {
+              try {
+                return new URL(origin).host === req.headers.host;
+              } catch {
+                return false;
+              }
+            })()
+          : req.headers['sec-fetch-site'] !== 'cross-site';
+        if (!sameOrigin) {
+          res.statusCode = 403;
+          res.end('Cross-site request refused');
+          return;
+        }
+        next();
+      });
+    },
+  };
+}
 
 // Dev-server-only endpoint for the in-page "download PDF" button (see Toolbar in
 // src/editing.tsx). Renders a fresh PDF from the *running* dev server on every request, using the
@@ -205,8 +257,97 @@ function uploadPhotoPlugin(): Plugin {
   };
 }
 
+const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
+
+// Dev-server-only endpoint behind the toolbar's "Upload CV" button (see Toolbar in
+// src/editing/toolbar.tsx). GET /__import-cv/status says whether an API key is configured (the
+// button is greyed out otherwise); POST /__import-cv takes the raw file, has Claude read it
+// (scripts/cv-import.mjs) and streams its progress, then the content in both languages. Nothing is written to disk
+// here - the client merges the result into the open CV and its other-language twin.
+function importCvPlugin(): Plugin {
+  return {
+    name: 'cv-import',
+    // ANTHROPIC_API_KEY may live in .env (gitignored) rather than the shell; it is read here, in
+    // Node, and never reaches the browser (no VITE_ prefix).
+    config(_, { mode }) {
+      const key = loadEnv(mode, import.meta.dirname, '').ANTHROPIC_API_KEY;
+      if (key && !process.env.ANTHROPIC_API_KEY) process.env.ANTHROPIC_API_KEY = key; // assigning undefined would store "undefined"
+    },
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const path = req.url?.split('?')[0];
+        if (path !== '/__import-cv' && path !== '/__import-cv/status') {
+          next();
+          return;
+        }
+        if (path === '/__import-cv/status') {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ available: isImportAvailable() }));
+          return;
+        }
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.end('Method not allowed');
+          return;
+        }
+        if (!isImportAvailable()) {
+          res.statusCode = 503;
+          res.end('ANTHROPIC_API_KEY is not set');
+          return;
+        }
+        try {
+          const chunks: Buffer[] = [];
+          let size = 0;
+          for await (const chunk of req) {
+            size += chunk.length;
+            if (size > MAX_IMPORT_BYTES) {
+              res.statusCode = 413;
+              res.end('File is larger than 10 MB');
+              return;
+            }
+            chunks.push(chunk);
+          }
+          const data = Buffer.concat(chunks);
+          const kind = detectKind(data);
+          if (!kind) {
+            res.statusCode = 415;
+            res.end('Only PDF, DOCX or plain-text files are accepted');
+            return;
+          }
+          // Streamed as one JSON object per line - { type: 'start' | 'text' | 'lang' }, then
+          // { type: 'result', ... } or { type: 'error', message } - so the UI can show real progress.
+          res.setHeader('Content-Type', 'application/x-ndjson');
+          const send = (event: object) => res.write(`${JSON.stringify(event)}\n`);
+          const abort = new AbortController();
+          res.on('close', () => abort.abort()); // the client gave up: stop paying for the request
+          send({ type: 'start' });
+          try {
+            const result = await importCv(kind, data, { onProgress: send, signal: abort.signal });
+            send({ type: 'result', ...result });
+          } catch (error) {
+            send({ type: 'error', message: error instanceof Error ? error.message : String(error) });
+          }
+          res.end();
+        } catch (error) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'text/plain');
+          res.end(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), pdfDownloadPlugin(), saveCvPlugin(), deleteCvPlugin(), uploadPhotoPlugin()],
+  plugins: [
+    react(),
+    securityGuardPlugin(),
+    pdfDownloadPlugin(),
+    saveCvPlugin(),
+    deleteCvPlugin(),
+    uploadPhotoPlugin(),
+    importCvPlugin(),
+  ],
   // Relative asset paths so dist/ also opens from disk if you ever need it.
   base: './',
 });

@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { UI_LANGS, useT, type UiLang } from '../i18n/ui-strings';
+import { importSummary, mergeCv } from '../lib/merge-cv';
 import type { CV } from '../types';
+import { ImportDialog, type ImportDone, type ImportStep } from './import-dialog';
+import { fetchImportAvailable, importCvFile } from './import-cv';
 import {
   baseVariantName,
   errorText,
@@ -103,6 +106,15 @@ const DOWNLOAD_ICON = icon(
   <>
     <path d="M12 3v12" />
     <path d="m7 10 5 5 5-5" />
+    <path d="M4 19h16" />
+  </>,
+);
+
+const CHECK_ICON = icon(<path d="m5 12 5 5L20 7" />);
+const UPLOAD_ICON = icon(
+  <>
+    <path d="M12 15V3" />
+    <path d="m7 8 5-5 5 5" />
     <path d="M4 19h16" />
   </>,
 );
@@ -296,7 +308,9 @@ export function Toolbar({
   canUndo,
   onUndo,
   variantNames,
+  loadVariant,
   languageDefaults,
+  onImport,
   uiLang,
   onUiLangChange,
 }: {
@@ -309,7 +323,10 @@ export function Toolbar({
   canUndo: boolean;
   onUndo: () => void;
   variantNames: string[];
+  loadVariant: (name: string) => CV;
   languageDefaults: Record<Lang, Pick<CV, 'locale' | 'labels'>>;
+  /** Applies a change to the open CV as one undoable step. */
+  onImport: (update: (prev: CV) => CV) => void;
   uiLang: UiLang;
   onUiLangChange: (next: UiLang) => void;
 }) {
@@ -318,7 +335,84 @@ export function Toolbar({
   const otherUiLang = UI_LANGS.find((l) => l !== uiLang) ?? uiLang;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [importAvailable, setImportAvailable] = useState<boolean | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+  const [importing, setImporting] = useState<{ fileName: string; done: ImportDone } | null>(null);
+  const importAbort = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Other-language files written by earlier imports; the bundled copy is stale until a reload.
+  const importedTwins = useRef<Record<string, CV>>({});
   const { base, lang } = parseVariant(dataName);
+
+  useEffect(() => {
+    void fetchImportAvailable().then(setImportAvailable);
+  }, []);
+
+  const canImport = importAvailable === true && !busy;
+
+  useEffect(() => {
+    if (!note) return;
+    const timer = window.setTimeout(() => setNote(null), 20000);
+    return () => window.clearTimeout(timer);
+  }, [note]);
+
+  useEffect(() => {
+    if (!justSaved) return;
+    const timer = window.setTimeout(() => setJustSaved(false), 2500);
+    return () => window.clearTimeout(timer);
+  }, [justSaved]);
+
+  // Dragging a file over the button; only files count (not selected text or page elements).
+  const onDragOver = (e: React.DragEvent) => {
+    if (!e.dataTransfer.types.includes('Files')) return;
+    e.preventDefault();
+    setDragOver(canImport);
+  };
+
+  // Claude returns the CV in both languages: the open one is merged as an undoable edit, its
+  // twin in the other language is merged into its file and saved right away.
+  const importCv = async (file: File) => {
+    setBusy(true);
+    setError(null);
+    setNote(null);
+    const abort = new AbortController();
+    importAbort.current = abort;
+    setImporting({ fileName: file.name, done: {} });
+    const markDone = (step: ImportStep) => setImporting((s) => s && { ...s, done: { ...s.done, [step]: true } });
+    try {
+      const imported = await importCvFile(
+        file,
+        (event) => markDone(event.type === 'start' ? 'upload' : event.type === 'text' ? 'text' : event.lang),
+        abort.signal,
+      );
+      const openLang: Lang = lang ?? (cv.locale.toLowerCase().startsWith('pl') ? 'pl' : 'en');
+      onImport((prev) => mergeCv(prev, imported[openLang]));
+      const other = LANGS.find((l) => l !== lang);
+      setNote(
+        `${importSummary(imported[openLang], cv.labels, t)}\n${
+          lang && other ? t.importSaveHint(lang.toUpperCase(), other.toUpperCase()) : t.importSaveHintSingle
+        }`,
+      );
+      if (lang && other) {
+        const otherName = variantName(base, other);
+        const current =
+          importedTwins.current[otherName] ??
+          (variantNames.includes(otherName) ? loadVariant(otherName) : { ...cv, ...languageDefaults[other] });
+        const merged = mergeCv(current, imported[other]);
+        await saveVariant(otherName, merged);
+        importedTwins.current[otherName] = merged;
+        markDone('save');
+      }
+    } catch (err) {
+      if (!abort.signal.aborted) setError(t.importFailed(errorText(err))); // cancelling is not an error
+    } finally {
+      importAbort.current = null;
+      setImporting(null);
+      setBusy(false);
+    }
+  };
 
   const save = async () => {
     setBusy(true);
@@ -326,6 +420,8 @@ export function Toolbar({
     try {
       await saveVariant(dataName, cv);
       onSaved(cv);
+      setNote(null); // the "click Save" hint after an import is done
+      setJustSaved(true);
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -400,19 +496,52 @@ export function Toolbar({
           {t.undo}
         </button>
       )}
-      {editMode && (
-        <button
-          type="button"
-          className="tb-btn"
-          onClick={() => void save()}
-          disabled={!dirty || busy}
-          title={dirty ? t.saveTitle(base) : t.nothingToSave}
-        >
-          {SAVE_ICON}
-          {t.save}
-          {dirty && <span className="dirty-dot" aria-label={t.unsaved} />}
+      <button
+        type="button"
+        className={dirty ? 'tb-btn attention' : justSaved ? 'tb-btn saved' : 'tb-btn'}
+        onClick={() => void save()}
+        disabled={!dirty || busy}
+        title={dirty ? t.saveTitle(base) : t.nothingToSave}
+      >
+        {justSaved && !dirty ? CHECK_ICON : SAVE_ICON}
+        {justSaved && !dirty ? t.saved : t.save}
+        {dirty && <span className="dirty-dot" aria-label={t.unsaved} />}
+      </button>
+      <span
+        className={dragOver ? 'tb-tip drag-over' : 'tb-tip'}
+        tabIndex={importAvailable === false ? 0 : undefined}
+        aria-describedby="import-cv-tip"
+        onDragEnter={onDragOver}
+        onDragOver={onDragOver}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault(); // otherwise the browser opens the dropped file
+          setDragOver(false);
+          const file = e.dataTransfer.files[0];
+          if (file && canImport) void importCv(file);
+        }}
+      >
+        <button type="button" className="tb-btn" onClick={() => fileInputRef.current?.click()} disabled={!canImport}>
+          {UPLOAD_ICON}
+          {busy ? t.importing : dragOver ? t.importDrop : t.importCv}
         </button>
-      )}
+        <span className="tb-tip-bubble" id="import-cv-tip" role="tooltip">
+          {importAvailable === false ? t.importUnavailable : t.importTip}
+        </span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          hidden
+          accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = ''; // lets the same file be picked again
+            if (file) void importCv(file);
+          }}
+        />
+      </span>
       <a
         className="tb-btn primary"
         href={`/__cv-pdf?data=${encodeURIComponent(dataName)}`}
@@ -437,6 +566,19 @@ export function Toolbar({
         {FLAGS[otherUiLang]}
       </button>
       {error && <span className="toolbar-error">{error}</span>}
+      {importing && (
+        <ImportDialog
+          fileName={importing.fileName}
+          done={importing.done}
+          withSave={lang !== null}
+          onCancel={() => importAbort.current?.abort()}
+        />
+      )}
+      {note && (
+        <div className="toolbar-note" role="status">
+          {note}
+        </div>
+      )}
     </div>
   );
 }

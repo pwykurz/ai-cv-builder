@@ -10,7 +10,7 @@ To use or customise the CV builder:
 
 1. **Fork** the repository to your own GitHub account (or clone it locally).
 2. Make changes in **your fork** or local copy.
-3. Keep personal CV data in `data/` — it is gitignored and never committed here.
+3. Keep personal CV data in `data/` and your API key in `.env` — both are gitignored and never committed here. Never paste a key into code, issues or pull requests, and never name it with a `VITE_` prefix (those variables end up in the browser bundle).
 
 Do **not** open pull requests unless the maintainer has asked for them.
 
@@ -19,6 +19,7 @@ Do **not** open pull requests unless the maintainer has asked for them.
 ```bash
 npm install
 npx playwright install chromium
+cp .env.example .env   # optional: add ANTHROPIC_API_KEY to enable "Upload CV"
 npm run dev
 ```
 

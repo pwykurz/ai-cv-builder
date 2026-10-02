@@ -18,10 +18,46 @@ const UI = {
     undoTitle: 'Cofnij ostatnią zmianę (Ctrl+Z)',
     save: 'Zapisz',
     saveTitle: (name: string) => `Zapisz zmiany w „${name}”`,
-    nothingToSave: 'Brak zmian do zapisania',
+    saved: 'Zapisano',
+    nothingToSave: 'Wszystko zapisane - brak zmian do zapisania',
     unsaved: 'niezapisane zmiany',
     pdfTitle: 'Pobierz PDF (ostatnia zapisana wersja)',
     pdfUnsaved: 'Masz niezapisane zmiany - PDF powstanie z ostatniej zapisanej wersji. Pobrać mimo to?',
+    importCv: 'Wgraj CV',
+    importing: 'Czytam CV…',
+    importDrop: 'Upuść plik',
+    importTip: (
+      <>
+        <strong>Wgraj CV</strong>
+        <span>
+          Claude odczyta <b>PDF, DOCX lub TXT</b> i uzupełni szablon w <b>PL i EN</b>.
+        </span>
+        <span>Kliknij lub przeciągnij plik. Kolejne pliki nadpisują pola.</span>
+      </>
+    ),
+    importUnavailable: (
+      <>
+        <strong>Niedostępne</strong>
+        <span>
+          Brak klucza <code>ANTHROPIC_API_KEY</code>. Dodaj go do <code>.env</code> i zrestartuj{' '}
+          <code>npm run dev</code>.
+        </span>
+      </>
+    ),
+    importFailed: (reason: string) => `Nie udało się wczytać CV: ${reason}`,
+    importDialogTitle: 'Wczytuję CV',
+    importDialogHint: 'To potrwa do pół minuty. Zostaw tę kartę otwartą.',
+    importStepUpload: 'Przesyłam plik',
+    importStepText: 'Odczytuję tekst z pliku',
+    importStepLang: (lang: string) => `Claude uzupełnia wersję ${lang}`,
+    importStepSave: 'Zapisuję drugą wersję językową',
+    importName: 'imię i nazwisko',
+    importDone: (name: string, jobs: number, skills: number, education: number) =>
+      `Wczytano: ${name || '?'} · doświadczenie: ${jobs} · umiejętności: ${skills} · edukacja: ${education}`,
+    importMissing: (fields: string) => `Nie znaleziono: ${fields}`,
+    importSaveHint: (open: string, other: string) =>
+      `Wersja ${other} jest już zapisana. Wersja ${open} czeka na zapis - kliknij Zapisz.`,
+    importSaveHintSingle: 'Zmiany czekają na zapis - kliknij Zapisz.',
     pickVariant: 'Wybierz wariant CV',
     variants: 'Warianty CV',
     duplicateAs: 'Duplikuj jako…',
@@ -69,10 +105,45 @@ const UI = {
     undoTitle: 'Undo the last change (Ctrl+Z)',
     save: 'Save',
     saveTitle: (name: string) => `Save changes to "${name}"`,
-    nothingToSave: 'Nothing to save',
+    saved: 'Saved',
+    nothingToSave: 'All changes saved - nothing to save',
     unsaved: 'unsaved changes',
     pdfTitle: 'Download PDF (last saved version)',
     pdfUnsaved: 'You have unsaved changes - the PDF will use the last saved version. Download anyway?',
+    importCv: 'Upload CV',
+    importing: 'Reading CV…',
+    importDrop: 'Drop file',
+    importTip: (
+      <>
+        <strong>Upload CV</strong>
+        <span>
+          Claude reads a <b>PDF, DOCX or TXT</b> and fills the template in <b>PL and EN</b>.
+        </span>
+        <span>Click or drag a file here. Each new file overwrites matching fields.</span>
+      </>
+    ),
+    importUnavailable: (
+      <>
+        <strong>Unavailable</strong>
+        <span>
+          <code>ANTHROPIC_API_KEY</code> is missing. Add it to <code>.env</code> and restart <code>npm run dev</code>.
+        </span>
+      </>
+    ),
+    importFailed: (reason: string) => `Couldn't read the CV: ${reason}`,
+    importDialogTitle: 'Importing your CV',
+    importDialogHint: 'This takes up to half a minute. Keep this tab open.',
+    importStepUpload: 'Uploading the file',
+    importStepText: 'Reading the file',
+    importStepLang: (lang: string) => `Claude fills in the ${lang} version`,
+    importStepSave: 'Saving the other language',
+    importName: 'name',
+    importDone: (name: string, jobs: number, skills: number, education: number) =>
+      `Read: ${name || '?'} · experience: ${jobs} · skills: ${skills} · education: ${education}`,
+    importMissing: (fields: string) => `Not found: ${fields}`,
+    importSaveHint: (open: string, other: string) =>
+      `The ${other} version is already saved. The ${open} version is waiting - click Save.`,
+    importSaveHintSingle: 'Changes are waiting - click Save.',
     pickVariant: 'Choose a CV variant',
     variants: 'CV variants',
     duplicateAs: 'Duplicate as…',

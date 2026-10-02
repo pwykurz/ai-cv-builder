@@ -46,7 +46,9 @@ export default function App() {
             canUndo={canUndo}
             onUndo={undo}
             variantNames={variantNames}
+            loadVariant={loadCv}
             languageDefaults={languageDefaults}
+            onImport={setCv}
             uiLang={uiLang}
             onUiLangChange={setUiLang}
           />

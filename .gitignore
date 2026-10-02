@@ -9,9 +9,10 @@ out/
 playwright-report/
 test-results/
 
-# Env files
+# Env files (secrets: ANTHROPIC_API_KEY) - every variant, except the committed template
 .env
-.env.local
+.env.*
+!.env.example
 
 # Logs
 *.log
