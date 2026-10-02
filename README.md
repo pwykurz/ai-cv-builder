@@ -1,6 +1,12 @@
 # CV as Code
 
+[![CI](https://github.com/pwykurz/ai-cv-builder/actions/workflows/ci.yml/badge.svg)](https://github.com/pwykurz/ai-cv-builder/actions/workflows/ci.yml)
+
 React + JSON data → ATS-friendly PDF with real text, plus automatic checks that parsers can read it correctly.
+
+> Sample CVs in `examples/` use **fictional** names and contact details (John Smith, Jan Kowalski). Never commit real personal data — use `data/` (gitignored).
+
+**Requirements:** Node.js 20+ (CI uses 22).
 
 ## Setup (once)
 
@@ -12,7 +18,7 @@ npx playwright install chromium
 ## Day-to-day workflow
 
 ```bash
-npm run dev      # live preview (http://localhost:5173); CV file changes show up immediately
+npm run dev      # preview at http://localhost:5173 — edit in the browser, or reload after changing JSON on disk
 npm run cv       # build + PDF to out/cv.en.pdf + text-layer checks (PASS / WARN / FAIL)
 ```
 
@@ -20,7 +26,7 @@ Each CV variant exists per language as `<variant>.<pl|en>.json`. The base CVs ar
 
 ### Your data vs the sample
 
-- `examples/` — fictional sample CVs shipped with the repo (John Smith in English, Jan Kowalski in Polish). Read-only.
+- `examples/` — fictional sample CVs shipped with the repo (John Smith in English, Jan Kowalski in Polish). Read-only on disk.
 - `data/` — **your** CV. This folder is in `.gitignore`, so your data never gets committed.
 - The app and scripts look up a variant in `data/` first, then `examples/`. Saving from the toolbar always writes to `data/`, so open a sample, edit it, and click **Save** to get your own copy. Uploaded photos land in `public/photos/` (also gitignored).
 
@@ -38,26 +44,29 @@ While running `npm run dev`, a floating, draggable toolbar appears in the top-ri
 - **PL | EN** — open the same variant in the other language. If that version does not exist yet, the toolbar offers to create it: a copy of the current content with the target language’s section headings and date format, ready to translate in edit mode,
 - **Undo** / **Ctrl+Z** (edit mode only) — reverts the last change: text edit, add, remove, reorder, or date change (up to 100 steps). While typing inside a field, Ctrl+Z uses the browser’s normal text undo,
 - **Save** (edit mode only) — writes changes to the open variant; a red dot means unsaved changes (it clears when you undo back to the saved state),
-- **flag** (end of the toolbar) — switches the **interface** language (toolbar, menus, edit controls): 🇵🇱 when English is active, 🇬🇧 when Polish is active. Independent of the CV content language. The choice is stored in the browser; English is the default,
+- **flag** (end of the toolbar) — switches the **interface** language (toolbar, menus, edit controls): Polish flag when English is active, UK flag when Polish is active. Independent of the CV content language. The choice is stored in the browser; English is the default,
 - **PDF** — a fresh PDF rendered with the same logic as `npm run cv` (no print dialog, no rebuild). It uses the saved file on disk, so the toolbar warns if you have unsaved changes.
 
 ## Project layout
 
-| File                       | Purpose                                                              |
-| -------------------------- | -------------------------------------------------------------------- |
-| `data/*.json`              | Your CV content, one file per variant (gitignored)                   |
-| `examples/*.json`          | Fictional sample CVs in the repo                                     |
-| `scripts/data-files.mjs`   | Resolves a variant: `data/` first, then `examples/`                  |
-| `src/App.tsx`              | App shell: providers, toolbar, state wiring                          |
-| `src/cv/`                  | CV layout and sections (what lands in the PDF)                       |
-| `src/editing/`             | Dev toolbar, inline editing primitives                               |
-| `src/hooks/`               | Shared React hooks (undo history)                                    |
-| `src/i18n/`                | Interface language strings (EN/PL)                                   |
-| `src/styles.css`           | Layout, A4 margins, page breaks                                      |
-| `src/types.ts`             | Data shape                                                           |
-| `scripts/render-pdf.mjs`   | Chromium → PDF file (CLI)                                            |
-| `scripts/pdf-renderer.mjs` | Shared render logic — CLI and dev download button (`vite.config.ts`) |
-| `scripts/check-pdf.mjs`    | “How an ATS sees it” text-layer checks                               |
+| Path                       | Purpose                                                      |
+| -------------------------- | ------------------------------------------------------------ |
+| `data/*.json`              | Your CV content, one file per variant (gitignored)           |
+| `examples/*.json`          | Fictional sample CVs in the repo                             |
+| `scripts/data-files.mjs`   | Resolves a variant: `data/` first, then `examples/`          |
+| `scripts/cv.mjs`           | Orchestrator: build → PDF → ATS checks                       |
+| `scripts/render-pdf.mjs`   | Chromium → PDF file (CLI)                                    |
+| `scripts/pdf-renderer.mjs` | Shared render logic — CLI and dev download button            |
+| `scripts/check-pdf.mjs`    | “How an ATS sees it” text-layer checks                       |
+| `vite.config.ts`           | Dev-server plugins: save, delete, photo upload, PDF download |
+| `src/App.tsx`              | App shell: providers, toolbar, state wiring                  |
+| `src/cv/`                  | CV layout and sections (what lands in the PDF)               |
+| `src/editing/`             | Dev toolbar, inline editing primitives                       |
+| `src/hooks/`               | Shared React hooks (undo history)                            |
+| `src/i18n/`                | Interface language strings (EN/PL)                           |
+| `src/lib/`                 | Utilities (date formatting, stable list IDs)                 |
+| `src/styles.css`           | Layout, A4 margins, page breaks                              |
+| `src/types.ts`             | Data shape                                                   |
 
 ## Photo
 
@@ -68,21 +77,31 @@ Manually: drop a file into `public/photos/` and set e.g. `"photo": "./photos/my-
 
 ## What `npm run cv` checks
 
-Last name as the first line of text; section headings Skills / Experience / Education in order; email and phone;
-each employer + role + start date; employer order; completeness of every bullet (detects truncated text);
-no ligatures or odd characters; no line breaks after hyphens; page count; no orphaned section heading at the bottom of a page.
+- PDF has a real text layer (not a flat image)
+- **Name** as the first line of text
+- Section headings Skills → Experience → Education, each on its own line, in order
+- Email and phone present in the text layer; LinkedIn present (warning if missing)
+- Every employer, role, and start date found; employers in the same order as in the JSON
+- All summary, bullet, and tech/skill list texts complete (catches truncated copy)
+- No ligatures or odd private-use characters
+- No line breaks after hyphens; hyphenated words intact (warnings)
+- Page count within limit; no section heading stranded at the bottom of a page; last page not nearly empty
+- PDF title metadata set
+
 **FAIL** = fix before sending the CV. **WARN** = worth a look.
 
 ## Development
 
 ```bash
 npm run lint          # ESLint
-npm run format:check  # Prettier
+npm run lint:fix      # ESLint with auto-fix
+npm run format        # Prettier (write)
+npm run format:check  # Prettier (check only)
 npm run build         # typecheck + production bundle
 npm run cv            # build + PDF + ATS checks
 ```
 
-CI runs the same checks on every push to `main` (see `.github/workflows/ci.yml`).
+CI runs lint, format check, build, and `npm run cv` on every push to `main` (see `.github/workflows/ci.yml`).
 
 ## Rules
 
@@ -95,6 +114,10 @@ CI runs the same checks on every push to `main` (see `.github/workflows/ci.yml`)
 
 This repo is meant to be **cloned or forked**, not written to by the public. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Security
+
+Report vulnerabilities privately — see [SECURITY.md](SECURITY.md). Do not paste personal data in public issues.
+
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — Copyright (c) 2026 Paweł Wykurz

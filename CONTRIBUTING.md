@@ -33,10 +33,28 @@ npm run cv
 
 ## Reporting issues
 
-If you find a bug in the template itself (not in your personal CV data), open an issue with:
+Use the [bug report template](https://github.com/pwykurz/ai-cv-builder/issues/new?template=bug_report.yml) and include:
 
 - what you expected
 - what happened
 - steps to reproduce
+- OS, Node.js version, browser (if relevant)
 
 Please do **not** paste real personal data (email, phone, address) into issues.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for how to report vulnerabilities privately.
+
+## Maintainer notes (GitHub settings)
+
+To keep this repo clone-only for the public:
+
+| Setting                         | Recommendation                                                |
+| ------------------------------- | ------------------------------------------------------------- |
+| **Branch protection** on `main` | Require PR, require CI checks, restrict pushes to owner       |
+| **Collaborators**               | None, unless explicitly needed                                |
+| **Fork PR workflows**           | Require approval for outside collaborators                    |
+| **Allow forking**               | Optional — disable if you only want clone, not one-click fork |
+
+These are configured in the GitHub repository settings, not in this codebase.

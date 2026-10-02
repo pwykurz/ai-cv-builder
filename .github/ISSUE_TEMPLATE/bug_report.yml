@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a bug in the CV template or tooling (not personal CV content)
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please describe a problem with the **template or scripts** — not your personal CV text.
+        Do **not** paste real email, phone, or address.
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: '1. npm run dev ...'
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: 'OS, Node.js version, browser'
+    validations:
+      required: false

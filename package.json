@@ -4,6 +4,28 @@
   "version": "1.0.0",
   "type": "module",
   "description": "CV as code: React template + JSON data -> ATS-friendly PDF, with automatic text checks.",
+  "license": "MIT",
+  "author": "Paweł Wykurz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pwykurz/ai-cv-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pwykurz/ai-cv-builder/issues"
+  },
+  "homepage": "https://github.com/pwykurz/ai-cv-builder#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "cv",
+    "resume",
+    "pdf",
+    "ats",
+    "react",
+    "json",
+    "playwright"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
