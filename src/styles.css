@@ -1,0 +1,861 @@
+:root {
+  --accent: #0a78a6;
+  --ink: #1f2937;
+  --body: #374151;
+  --muted: #6b7280;
+  --rule: #d1d5db;
+}
+
+/* A4 with real margins; the browser repeats them on every printed page. */
+@page {
+  size: A4;
+  margin: 13mm 15mm 13mm 15mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  margin: 0;
+  background: #e5e7eb;
+  font-family: 'Lato', 'Liberation Sans', Arial, sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.4;
+  color: var(--body);
+  /* Ligatures (fi, fl) make some parsers lose letters: "workflow" -> "workow". Keep them off. */
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'clig' 0, 'calt' 0;
+}
+
+/* Screen preview: a sheet of paper. Print: just the content inside @page margins. */
+.page {
+  position: relative;
+  width: 210mm;
+  margin: 12px auto;
+  padding: 13mm 15mm;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ---------- Editor toolbar (screen-only dev tooling, see src/editing.tsx) ---------- */
+/* Fixed (not tied to .page), so it stays put while scrolling a long, multi-page CV. Hidden
+   below under @media print so none of this ever reaches the printed page or exported PDF.
+   Layout: [handle] [file menu] | [Podgląd|Edycja] | [Zapisz] [PDF] - only PDF is filled. */
+.toolbar {
+  --tb-hover: #f1f3f5;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 6px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(17, 24, 39, 0.12);
+  font-family: 'Lato', 'Liberation Sans', Arial, sans-serif;
+  font-size: 9.5pt;
+  color: var(--ink);
+}
+
+.toolbar button,
+.toolbar input {
+  font: inherit;
+  color: inherit;
+}
+
+.toolbar-handle {
+  cursor: grab;
+  color: var(--muted);
+  padding: 0 3px;
+  touch-action: none;
+  user-select: none;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 4px;
+  background: var(--rule);
+}
+
+/* Shared shape for every text+icon control in the bar; transparent until hovered. */
+.tb-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tb-btn:hover:not(:disabled) {
+  background: var(--tb-hover);
+}
+
+.tb-btn:disabled {
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: default;
+}
+
+.tb-btn:focus-visible,
+.segmented button:focus-visible,
+.menu-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* The one main action, so the only filled button. */
+.tb-btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.tb-btn.primary:hover {
+  background: #086389;
+}
+
+.file-btn .chevron {
+  color: var(--muted);
+}
+
+.dirty-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e2574c;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--tb-hover);
+}
+
+.segmented button {
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.segmented button.active {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.15);
+}
+
+/* Interface language: a single flag showing the language you'd switch to. */
+.flag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.flag-btn svg {
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.15);
+}
+
+.flag-btn:hover {
+  background: var(--tb-hover);
+}
+
+.flag-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---------- File menu (variant switching + duplicate + delete) ---------- */
+.file-menu {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 230px;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.16);
+}
+
+.menu-label {
+  padding: 6px 10px 4px;
+  font-size: 7.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+/* File names keep their real casing inside the uppercase caption. */
+.menu-label-name {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--ink);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item:hover:not(:disabled) {
+  background: var(--tb-hover);
+}
+
+.menu-item:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.menu-item .check {
+  width: 14px;
+  color: var(--accent);
+}
+
+.menu-item.danger {
+  color: #c2362b;
+}
+
+.menu-item.danger:hover:not(:disabled) {
+  background: #fdecea;
+}
+
+.menu-item .hint {
+  margin-left: auto;
+  font-size: 7.5pt;
+  color: var(--muted);
+}
+
+.menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--rule);
+}
+
+.menu-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+}
+
+.menu-form input {
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.menu-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.menu-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.toolbar-error {
+  padding: 0 6px 4px;
+  font-size: 8pt;
+  color: #c2362b;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+  .page {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  .toolbar {
+    display: none;
+  }
+}
+
+p,
+li {
+  orphans: 2;
+  widows: 2;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nb {
+  white-space: nowrap;
+}
+
+/* ---------- Inline editing (screen-only; see src/editing.tsx) ---------- */
+.editable {
+  border-radius: 3px;
+  outline: none;
+}
+
+.editable:hover {
+  box-shadow: 0 0 0 1px var(--rule);
+}
+
+.editable:focus {
+  box-shadow: 0 0 0 1px var(--accent);
+  background: #f7fbfd;
+}
+
+/* ↑ ↓ × for one list entry (ItemControls). Muted until hovered; arrows go dim at the ends. */
+.item-controls {
+  display: inline-flex;
+  flex: none;
+  gap: 1px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.item-controls.block {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 1;
+  margin-left: 0;
+  padding: 1px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.ctl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ctl-btn:hover:not(:disabled) {
+  color: var(--accent);
+  background: #eef4f8;
+}
+
+.ctl-btn.remove:hover {
+  color: #fff;
+  background: #e2574c;
+}
+
+.ctl-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* "+ Dodaj …" - quiet dashed chip so it reads as a slot for new content, not as CV text. */
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  margin: 3px 0 6px;
+  padding: 2px 10px;
+  font: inherit;
+  font-size: 8pt;
+  font-weight: 700;
+  color: var(--muted);
+  background: transparent;
+  border: 1px dashed var(--rule);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.add-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: #f7fbfd;
+}
+
+/* Lines up with the bullet text, not the bullet marker. */
+.add-btn.add-bullet {
+  margin-left: 14px;
+}
+
+.editable-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.editable-row .editable {
+  flex: 1;
+}
+
+/* In edit mode the job/project title row also holds the date inputs - keep them clear of the
+   block's "×" in the top-right corner. */
+.job > .row:has(.date-edit),
+.project > .row:has(.date-edit) {
+  padding-right: 64px;
+}
+
+.dates-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 7.5pt;
+  color: var(--muted);
+}
+
+.date-edit input[type='month'] {
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 1px 2px;
+  width: 7.5em;
+}
+
+.date-edit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+@media print {
+  .editable:hover,
+  .editable:focus {
+    box-shadow: none;
+    background: none;
+  }
+  .item-controls,
+  .add-btn,
+  .photo-overlay,
+  .date-edit {
+    display: none;
+  }
+}
+
+/* ---------- Header ---------- */
+/* The headline is shown ABOVE the name and the photo spans name+summary, but DOM order stays
+   name -> headline -> summary -> photo (see App.tsx), so the PDF text layer order is unaffected.
+   Grid areas move things visually without changing paint order. */
+.head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 20px;
+  grid-template-areas:
+    'headline headline'
+    'name     photo'
+    'summary  photo';
+  align-items: start;
+}
+
+.head h1 {
+  grid-area: name;
+  margin: 10px 0 8px;
+  font-size: 25pt;
+  line-height: 1.1;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+/* Uppercase here is safe: unlike the name, the headline text isn't checked verbatim by
+   scripts/check-pdf.mjs, so baking the transform into the PDF text layer is harmless. */
+.headline {
+  grid-area: headline;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--accent);
+  font-size: 8.6pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.summary {
+  grid-area: summary;
+}
+
+/* Sized to fit within name + summary combined height, so it never forces extra blank
+   space before whatever comes after the header. */
+.photo {
+  grid-area: photo;
+  width: 28mm;
+  height: 32mm;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+}
+
+/* Edit mode wraps the photo (see PhotoEditor) so a "Change photo" overlay can sit on top of it;
+   the slot takes over the photo's grid area and size. */
+.photo-slot {
+  grid-area: photo;
+  position: relative;
+  width: 28mm;
+  height: 32mm;
+}
+
+.photo-slot .photo {
+  display: block;
+}
+
+.photo-slot.empty {
+  border: 1px dashed var(--rule);
+  border-radius: 6px;
+}
+
+.photo-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 8pt;
+  font-weight: 700;
+  text-align: center;
+  color: #fff;
+  background: rgba(17, 24, 39, 0.6);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.photo-slot:hover .photo-overlay,
+.photo-overlay:focus-visible,
+.photo-overlay.busy {
+  opacity: 1;
+}
+
+.photo-overlay:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* No photo yet: the slot is always visible as an "Add photo" target, not a dark box. */
+.photo-slot.empty .photo-overlay {
+  opacity: 1;
+  color: var(--muted);
+  background: transparent;
+}
+
+.photo-slot.empty .photo-overlay:hover {
+  color: var(--accent);
+  background: #f7fbfd;
+}
+
+/* ---------- Summary and contact ---------- */
+.summary p {
+  margin: 0 0 6px;
+}
+
+.contact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px 16px;
+  margin: 10px 0 12px;
+}
+
+.contact dt {
+  font-size: 7.2pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.contact dd {
+  margin: 0;
+  font-size: 9pt;
+  white-space: nowrap;
+}
+
+/* ---------- Sections ---------- */
+.section {
+  margin-bottom: 12px;
+}
+
+.section h2 {
+  margin: 0 0 8px;
+  font-size: 11pt;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  break-after: avoid;
+}
+
+.skills {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 3px 12px;
+  margin: 0;
+}
+
+.skills dt {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.skills dd {
+  margin: 0;
+}
+
+/* ---------- Experience: timeline ---------- */
+.timeline {
+  position: relative;
+  margin-left: 3px;
+  padding-left: 17px;
+}
+
+/* Drawn as its own element (not a border) so it can start exactly at the center of the
+   first dot instead of at the top of the container, which left a stub poking out above it. */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+}
+
+.job {
+  position: relative;
+  margin-bottom: 7px;
+}
+
+.job:last-child {
+  margin-bottom: 0;
+}
+
+.job::before {
+  content: '';
+  position: absolute;
+  left: -23px;
+  top: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--accent);
+}
+
+/* Title row: role/name on the left, dates on the right but in the SAME text line. */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  break-after: avoid;
+}
+
+.role,
+.project-name {
+  margin: 0;
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.project-name {
+  font-size: 9.4pt;
+}
+
+.client {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.dates {
+  font-size: 8.4pt;
+  font-weight: 400;
+  color: var(--body);
+  white-space: nowrap;
+}
+
+.company {
+  margin: 1px 0 3px;
+  font-size: 9pt;
+  font-weight: 700;
+  color: var(--accent);
+  break-after: avoid;
+}
+
+.blurb {
+  margin: 0 0 3px;
+  break-after: avoid;
+}
+
+ul {
+  margin: 0;
+  padding-left: 14px;
+}
+
+li {
+  margin: 0 0 2px;
+  padding-left: 2px;
+}
+
+li::marker {
+  color: var(--accent);
+}
+
+.tech {
+  margin: 3px 0 0;
+  font-size: 9pt;
+  color: var(--muted);
+}
+
+.tech strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.links {
+  margin: 0 0 2px;
+  font-size: 8.2pt;
+  color: var(--accent);
+}
+
+/* ---------- Projects nested under an employer ---------- */
+/* A shaded panel (not just an indent) so a scan instantly reads "this is inside the job
+   above", not a peer entry with its own, equally prominent date range. */
+.projects {
+  margin-top: 7px;
+  padding: 8px 12px 9px;
+  background: #f7f9fb;
+  border-radius: 5px;
+}
+
+.projects-label {
+  margin: 0 0 6px;
+  font-size: 7pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.project {
+  position: relative;
+  margin: 0;
+}
+
+/* Only a separator between multiple projects, not a repeated border per project. */
+.project + .project {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--rule);
+}
+
+/* Smaller and lighter than a job's own dates (.row .dates), so it reads as
+   subordinate info, never mistaken for the employment date range. */
+.project .dates {
+  font-size: 8.1pt;
+}
+
+/* A project may continue on the next page (no big white gaps), but only between bullets,
+   and the "Tech stack" line never ends up alone on a page. */
+li {
+  break-inside: avoid;
+}
+
+.tech {
+  break-before: avoid;
+}
+
+.job.compact {
+  margin-bottom: 10px;
+  break-inside: avoid;
+}
+
+/* ---------- Education / meta / consent ---------- */
+.edu {
+  justify-content: flex-start;
+}
+
+.edu .dates-wrap {
+  margin-left: auto;
+}
+
+.edu p {
+  margin: 0;
+}
+
+.meta {
+  margin: 0;
+}
+
+.consent {
+  margin: 6px 0 0;
+  padding-top: 3px;
+  border-top: 1px solid var(--rule);
+  font-size: 6.6pt;
+  font-style: italic;
+  color: var(--muted);
+}

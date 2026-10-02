@@ -1,0 +1,29 @@
+{
+  "name": "cv-builder",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "CV as code: React template + JSON data -> ATS-friendly PDF, with automatic text checks.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "pdf": "node scripts/render-pdf.mjs",
+    "check": "node scripts/check-pdf.mjs",
+    "cv": "node scripts/cv.mjs",
+    "cv:all": "node scripts/cv.mjs --all"
+  },
+  "dependencies": {
+    "@fontsource/lato": "^5.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "pdfjs-dist": "^4.10.38",
+    "playwright": "^1.56.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21"
+  }
+}

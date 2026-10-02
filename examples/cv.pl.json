@@ -1,0 +1,172 @@
+{
+  "locale": "pl-PL",
+  "labels": {
+    "skills": "Umiejętności",
+    "experience": "Doświadczenie",
+    "education": "Wykształcenie",
+    "languages": "Języki",
+    "interests": "Zainteresowania",
+    "present": "obecnie",
+    "techStack": "Stack technologiczny",
+    "technologies": "Technologie",
+    "keyProjects": "Kluczowe projekty",
+    "email": "E-mail",
+    "address": "Adres",
+    "phone": "Telefon",
+    "linkedin": "LinkedIn",
+    "website": "Strona WWW",
+    "github": "GitHub"
+  },
+  "profile": {
+    "name": "Jan Kowalski",
+    "headline": "Senior Frontend Engineer | React, TypeScript, Next.js | Wizualizacja danych",
+    "photo": "./example-avatar.svg",
+    "summary": [
+      "Senior frontend engineer z 10-letnim doświadczeniem w tworzeniu aplikacji webowych, od 2017 roku z fokusem na React i TypeScript. Specjalizuję się w produktach opartych na danych: dashboardy analityczne, interaktywne wykresy i narzędzia wewnętrzne, które zamieniają duże zbiory danych w decyzje, w tym platforma analityczna dla handlu używana przez ponad 40 zespołów klientów.",
+      "Ściśle współpracuję z projektantami, product managerami i zespołami backendowymi, dbam o dostępne i szybkie interfejsy. Na co dzień korzystam z programowania wspieranego AI (Cursor, ChatGPT) i testów automatycznych, co pozwala dostarczać funkcjonalności o 20–30% szybciej bez utraty jakości kodu."
+    ],
+    "contact": {
+      "email": "jan.kowalski@example.com",
+      "address": "Warszawa, Polska",
+      "phone": "+48 123 456 789",
+      "linkedin": "www.linkedin.com/in/jan-kowalski-example",
+      "website": "jankowalski.example.com",
+      "github": "github.com/jan-kowalski-example"
+    }
+  },
+  "skills": [
+    {
+      "label": "Frontend",
+      "items": ["React", "TypeScript", "JavaScript", "Next.js", "HTML5", "CSS", "SASS"]
+    },
+    {
+      "label": "Stan i dane",
+      "items": ["TanStack Query", "Redux Toolkit", "REST", "GraphQL", "WebSockets", "D3.js"]
+    },
+    {
+      "label": "UI i stylowanie",
+      "items": ["Tailwind CSS", "Material UI", "Storybook", "Figma"]
+    },
+    {
+      "label": "Testy i jakość",
+      "items": ["Vitest", "Playwright", "Testing Library", "Lighthouse"]
+    },
+    {
+      "label": "AI i automatyzacja",
+      "items": ["programowanie wspierane AI", "Cursor", "ChatGPT", "GitHub Actions"]
+    },
+    {
+      "label": "Chmura i narzędzia",
+      "items": ["Docker", "Git", "AWS", "Vercel"]
+    }
+  ],
+  "experience": [
+    {
+      "role": "Senior Frontend Engineer",
+      "company": "Brightline Analytics, Warszawa",
+      "start": "2021-03",
+      "end": null,
+      "blurb": "Firma produktowa tworząca oprogramowanie analityczne dla sieci handlowych; udział w zespole odpowiedzialnym za dashboard dla klientów i wewnętrzne narzędzia do danych.",
+      "projects": [
+        {
+          "name": "Insight Dashboard",
+          "client": "platforma analityczna dla handlu",
+          "start": "2023-06",
+          "end": null,
+          "bullets": [
+            "Przebudowa głównego dashboardu raportowego w React i TypeScript, z konfigurowalnymi widżetami i zapisanymi widokami dla każdego zespołu klienta",
+            "Wprowadzenie wirtualizowanych tabel i próbkowania wykresów, skracające ładowanie największych raportów z 9 do 2 sekund",
+            "Programowanie wspierane AI (Cursor) przy tworzeniu testów i refaktoryzacjach, z pokryciem testami powyżej 85%"
+          ],
+          "tech": ["React", "TypeScript", "TanStack Query", "D3.js", "Tailwind CSS", "Vitest", "AWS"],
+          "links": ["insight.example.com"]
+        },
+        {
+          "name": "Labelling Studio",
+          "client": "wewnętrzne narzędzie do danych uczenia maszynowego",
+          "start": "2021-03",
+          "end": "2023-05",
+          "bullets": [
+            "Budowa przeglądarkowego narzędzia do opisywania zdjęć i opisów produktów, używanych do trenowania modeli rekomendacyjnych",
+            "Współpraca w czasie rzeczywistym przez WebSockets, pozwalająca kilku osobom pracować jednocześnie na jednym zbiorze danych",
+            "Raporty jakości pokazujące zgodność między recenzentami, które zmniejszyły liczbę poprawek o 25%"
+          ],
+          "tech": ["React", "TypeScript", "Redux Toolkit", "WebSockets", "Material UI", "Docker"]
+        }
+      ]
+    },
+    {
+      "role": "Freelance Frontend Developer",
+      "company": "Działalność własna, Warszawa (projekty poboczne)",
+      "start": "2019-04",
+      "end": null,
+      "blurb": "Niewielkie projekty webowe dla lokalnych firm, realizowane równolegle z pracą na etacie.",
+      "bullets": [
+        "Realizacja landing page'y, systemów rezerwacji i małych sklepów internetowych, od pierwszego szkicu po wdrożenie i przekazanie klientowi"
+      ],
+      "projects": [
+        {
+          "name": "Harbour Health",
+          "client": "system rezerwacji dla gabinetu fizjoterapii",
+          "start": "2022-02",
+          "end": "2023-11",
+          "bullets": [
+            "Rezerwacja wizyt online z przypomnieniami, zastępująca zapisy wyłącznie telefoniczne w trzech placówkach",
+            "Wynik 100 w audycie dostępności Lighthouse na wszystkich publicznych stronach"
+          ],
+          "tech": ["Next.js", "TypeScript", "Tailwind CSS", "Vercel"],
+          "links": ["harbour.example.com"]
+        },
+        {
+          "name": "Pedal and Co.",
+          "client": "sklep internetowy warsztatu rowerowego",
+          "start": "2020-05",
+          "end": null,
+          "bullets": [
+            "Niewielki sklep internetowy z katalogiem produktów, stanami magazynowymi i prostym panelem administracyjnym dla właścicieli"
+          ],
+          "tech": ["Next.js", "TypeScript", "Headless CMS", "Stripe"],
+          "links": ["pedal.example.com"]
+        }
+      ]
+    },
+    {
+      "role": "Frontend Developer",
+      "company": "Kestrel Labs, Kraków",
+      "start": "2017-09",
+      "end": "2021-02",
+      "compact": true,
+      "bullets": [
+        "Rozwój funkcjonalności aplikacji do zarządzania projektami, używanej przez około 2000 zespołów",
+        "Migracja głównej aplikacji z jQuery do React, strona po stronie, bez wstrzymywania prac nad nowymi funkcjami"
+      ],
+      "tech": ["React", "JavaScript", "Redux", "SASS", "Jest", "Git"]
+    },
+    {
+      "role": "Junior Web Developer",
+      "company": "Lumen Digital, Łódź",
+      "start": "2015-06",
+      "end": "2017-08",
+      "compact": true,
+      "bullets": ["Tworzenie i utrzymanie stron marketingowych oraz szablonów e-maili dla klientów agencji"],
+      "tech": ["JavaScript", "jQuery", "HTML i CSS", "PHP", "Git"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Informatyka, inżynier",
+      "school": "Politechnika Przykładowa, Warszawa",
+      "start": "2011-10",
+      "end": "2015-02"
+    },
+    {
+      "degree": "Profil matematyczno-fizyczny",
+      "school": "Liceum Ogólnokształcące nr 1, Łódź",
+      "start": "2008-09",
+      "end": "2011-06"
+    }
+  ],
+  "languages": ["polski (ojczysty)", "angielski (C1)", "niemiecki (B1)"],
+  "interests": "Kolarstwo, fotografia analogowa, wkład w projekty open source",
+  "consent": "Wyrażam zgodę na przetwarzanie moich danych osobowych w celu prowadzenia rekrutacji na stanowisko, na które aplikuję."
+}

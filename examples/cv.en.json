@@ -1,0 +1,172 @@
+{
+  "locale": "en-GB",
+  "labels": {
+    "skills": "Skills",
+    "experience": "Experience",
+    "education": "Education",
+    "languages": "Languages",
+    "interests": "Interests",
+    "present": "Present",
+    "techStack": "Tech stack",
+    "technologies": "Technologies",
+    "keyProjects": "Key projects",
+    "email": "Email",
+    "address": "Address",
+    "phone": "Phone",
+    "linkedin": "LinkedIn",
+    "website": "Website",
+    "github": "GitHub"
+  },
+  "profile": {
+    "name": "John Smith",
+    "headline": "Senior Frontend Engineer | React, TypeScript, Next.js | Data Visualisation",
+    "photo": "./example-avatar.svg",
+    "summary": [
+      "Senior frontend engineer with 10 years of experience building web applications, focused on React and TypeScript since 2017. I specialise in data-heavy products: analytics dashboards, interactive charts and internal tools that turn large datasets into decisions, including a retail insights platform used by 40+ client teams.",
+      "I work closely with designers, product managers and backend engineers, and care about accessible, fast interfaces. In my daily work I use AI-assisted development (Cursor, ChatGPT) and automated testing, which helps ship features 20–30% faster without lowering code quality."
+    ],
+    "contact": {
+      "email": "john.smith@example.com",
+      "address": "London, United Kingdom",
+      "phone": "+44 20 7946 0123",
+      "linkedin": "www.linkedin.com/in/john-smith-example",
+      "website": "johnsmith.example.com",
+      "github": "github.com/john-smith-example"
+    }
+  },
+  "skills": [
+    {
+      "label": "Frontend",
+      "items": ["React", "TypeScript", "JavaScript", "Next.js", "HTML5", "CSS", "SASS"]
+    },
+    {
+      "label": "State and data",
+      "items": ["TanStack Query", "Redux Toolkit", "REST", "GraphQL", "WebSockets", "D3.js"]
+    },
+    {
+      "label": "UI and styling",
+      "items": ["Tailwind CSS", "Material UI", "Storybook", "Figma"]
+    },
+    {
+      "label": "Testing and quality",
+      "items": ["Vitest", "Playwright", "Testing Library", "Lighthouse"]
+    },
+    {
+      "label": "AI and automation",
+      "items": ["AI-assisted development", "Cursor", "ChatGPT", "GitHub Actions"]
+    },
+    {
+      "label": "Cloud and tools",
+      "items": ["Docker", "Git", "AWS", "Vercel"]
+    }
+  ],
+  "experience": [
+    {
+      "role": "Senior Frontend Engineer",
+      "company": "Brightline Analytics, London",
+      "start": "2021-03",
+      "end": null,
+      "blurb": "Product company building analytics software for retail chains; part of the team responsible for the customer-facing dashboard and internal data tooling.",
+      "projects": [
+        {
+          "name": "Insight Dashboard",
+          "client": "retail analytics platform",
+          "start": "2023-06",
+          "end": null,
+          "bullets": [
+            "Rebuilt the main reporting dashboard in React and TypeScript, with configurable widgets and saved views for each client team",
+            "Introduced virtualised tables and chart sampling, cutting load time of the largest reports from 9 to 2 seconds",
+            "Used AI-assisted coding (Cursor) for test scaffolding and refactors, keeping test coverage above 85%"
+          ],
+          "tech": ["React", "TypeScript", "TanStack Query", "D3.js", "Tailwind CSS", "Vitest", "AWS"],
+          "links": ["insight.example.com"]
+        },
+        {
+          "name": "Labelling Studio",
+          "client": "internal machine-learning data tool",
+          "start": "2021-03",
+          "end": "2023-05",
+          "bullets": [
+            "Built a browser tool for labelling product images and descriptions used to train recommendation models",
+            "Added real-time collaboration over WebSockets so several reviewers could work on one dataset at once",
+            "Designed quality reports showing agreement between reviewers, which reduced relabelling work by 25%"
+          ],
+          "tech": ["React", "TypeScript", "Redux Toolkit", "WebSockets", "Material UI", "Docker"]
+        }
+      ]
+    },
+    {
+      "role": "Freelance Frontend Developer",
+      "company": "Self-employed, London (side projects)",
+      "start": "2019-04",
+      "end": null,
+      "blurb": "Small web projects for local businesses, delivered alongside full-time work.",
+      "bullets": [
+        "Delivered landing pages, booking flows and small online shops, from first sketch to deployment and handover"
+      ],
+      "projects": [
+        {
+          "name": "Harbour Health",
+          "client": "booking system for a physiotherapy clinic",
+          "start": "2022-02",
+          "end": "2023-11",
+          "bullets": [
+            "Built online appointment booking with reminders, replacing phone-only bookings for three clinic locations",
+            "Reached a Lighthouse accessibility score of 100 on all public pages"
+          ],
+          "tech": ["Next.js", "TypeScript", "Tailwind CSS", "Vercel"],
+          "links": ["harbour.example.com"]
+        },
+        {
+          "name": "Pedal and Co.",
+          "client": "online shop for a bike workshop",
+          "start": "2020-05",
+          "end": null,
+          "bullets": [
+            "Created a small e-commerce site with a product catalogue, stock levels and a simple admin panel for the owners"
+          ],
+          "tech": ["Next.js", "TypeScript", "Headless CMS", "Stripe"],
+          "links": ["pedal.example.com"]
+        }
+      ]
+    },
+    {
+      "role": "Frontend Developer",
+      "company": "Kestrel Labs, Manchester",
+      "start": "2017-09",
+      "end": "2021-02",
+      "compact": true,
+      "bullets": [
+        "Developed features for a project-management web app used by around 2,000 teams",
+        "Migrated the main application from jQuery to React, page by page, without a feature freeze"
+      ],
+      "tech": ["React", "JavaScript", "Redux", "SASS", "Jest", "Git"]
+    },
+    {
+      "role": "Junior Web Developer",
+      "company": "Lumen Digital, Leeds",
+      "start": "2015-06",
+      "end": "2017-08",
+      "compact": true,
+      "bullets": ["Built and maintained marketing websites and email templates for agency clients"],
+      "tech": ["JavaScript", "jQuery", "HTML and CSS", "PHP", "Git"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "BSc Computer Science",
+      "school": "University of Northbridge, Northbridge",
+      "start": "2012-09",
+      "end": "2015-06"
+    },
+    {
+      "degree": "A-levels: Mathematics, Physics, Computer Science",
+      "school": "Riverside Sixth Form College, Leeds",
+      "start": "2010-09",
+      "end": "2012-06"
+    }
+  ],
+  "languages": ["English (native)", "German (B1)"],
+  "interests": "Cycling, film photography, contributing to open-source projects",
+  "consent": "I hereby consent to the processing of my personal data for the purpose of recruitment for the position I am applying for."
+}
