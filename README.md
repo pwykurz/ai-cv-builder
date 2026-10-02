@@ -43,9 +43,14 @@ While running `npm run dev`, a floating, draggable toolbar appears in the top-ri
 - **Preview | Edit** — in edit mode every text field is editable (click and type). Move bullets, projects, employers, education entries, skill groups, or paragraphs with **↑ ↓**, remove with **×**, and add with **+ Add …** (new items inherit their section’s style and arrive with text selected for immediate typing; jobs, projects, and education are inserted at the top because lists are newest-first). Dates are edited with month pickers. In preview mode the page looks exactly like the printed CV,
 - **PL | EN** — open the same variant in the other language. If that version does not exist yet, the toolbar offers to create it: a copy of the current content with the target language’s section headings and date format, ready to translate in edit mode,
 - **Undo** / **Ctrl+Z** (edit mode only) — reverts the last change: text edit, add, remove, reorder, or date change (up to 100 steps). While typing inside a field, Ctrl+Z uses the browser’s normal text undo,
-- **Save** (edit mode only) — writes changes to the open variant; a red dot means unsaved changes (it clears when you undo back to the saved state),
+- **Save** — always visible; writes changes to the open variant (tinted while there is something unsaved, “Saved ✓” right after); a red dot means unsaved changes (it clears when you undo back to the saved state),
 - **flag** (end of the toolbar) — switches the **interface** language (toolbar, menus, edit controls): Polish flag when English is active, UK flag when Polish is active. Independent of the CV content language. The choice is stored in the browser; English is the default,
+- **Upload CV** — pick a PDF, DOCX or TXT: Claude reads it and fills the template in **both languages** (PL and EN). Upload as many CVs as you like; each one overwrites the fields it contains and leaves the rest. The open language is applied as an undoable edit (click **Save** to keep it); the other language is saved right away. Needs an Anthropic API key (see below) — without one the button is greyed out and its tooltip says why,
 - **PDF** — a fresh PDF rendered with the same logic as `npm run cv` (no print dialog, no rebuild). It uses the saved file on disk, so the toolbar warns if you have unsaved changes.
+
+### Upload CV: API key
+
+Copy `.env.example` to `.env` (gitignored), set `ANTHROPIC_API_KEY=` to your key from [console.anthropic.com](https://console.anthropic.com/) and restart `npm run dev`. The key is read only by the dev server (`scripts/cv-import.mjs`) and never sent to the browser. The uploaded file is sent to the Anthropic API for reading — don't upload CVs you can't share with it.
 
 ## Project layout
 
