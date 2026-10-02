@@ -13,6 +13,57 @@ const SAFE_NAME = /^[\w.-]+$/;
 const DEFAULT_VARIANT = 'cv.en';
 const PROTECTED_VARIANTS = ['cv.pl', 'cv.en'];
 
+// Two guards for the dev server, which holds the API key and can write to data/.
+// 1. Secrets must never be VITE_-prefixed: Vite bundles those into the browser code. The key is
+//    read by the dev server only, as ANTHROPIC_API_KEY - so refuse to start if a secret-looking
+//    VITE_ variable exists.
+// 2. State-changing endpoints (/__save-cv, /__upload-photo, /__import-cv, ...) only accept requests
+//    from this very page. Without it, any website open in your browser could POST to
+//    localhost:5173 and spend your API key or overwrite data/ (a cross-site "simple" request is sent
+//    even though the page can't read the reply). Browsers always send Origin on POST/DELETE; tools
+//    like curl send neither Origin nor Sec-Fetch-Site and are let through.
+function securityGuardPlugin(): Plugin {
+  return {
+    name: 'cv-security-guard',
+    config(_, { mode }) {
+      const exposed = Object.keys(loadEnv(mode, import.meta.dirname, 'VITE_')).filter((name) =>
+        /ANTHROPIC|SECRET|TOKEN|API_?KEY/i.test(name),
+      );
+      if (exposed.length > 0) {
+        throw new Error(
+          `${exposed.join(', ')} would be bundled into the browser code (VITE_ prefix) and leak. ` +
+            'Rename it to ANTHROPIC_API_KEY (no VITE_ prefix): only the dev server reads that one.',
+        );
+      }
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const mutating = req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS';
+        if (!req.url?.startsWith('/__') || !mutating) {
+          next();
+          return;
+        }
+        const { origin } = req.headers;
+        const sameOrigin = origin
+          ? (() => {
+              try {
+                return new URL(origin).host === req.headers.host;
+              } catch {
+                return false;
+              }
+            })()
+          : req.headers['sec-fetch-site'] !== 'cross-site';
+        if (!sameOrigin) {
+          res.statusCode = 403;
+          res.end('Cross-site request refused');
+          return;
+        }
+        next();
+      });
+    },
+  };
+}
+
 // Dev-server-only endpoint for the in-page "download PDF" button (see Toolbar in
 // src/editing.tsx). Renders a fresh PDF from the *running* dev server on every request, using the
 // same Playwright logic as `npm run cv` (scripts/pdf-renderer.mjs) - so it always reflects the
@@ -288,7 +339,15 @@ function importCvPlugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), pdfDownloadPlugin(), saveCvPlugin(), deleteCvPlugin(), uploadPhotoPlugin(), importCvPlugin()],
+  plugins: [
+    react(),
+    securityGuardPlugin(),
+    pdfDownloadPlugin(),
+    saveCvPlugin(),
+    deleteCvPlugin(),
+    uploadPhotoPlugin(),
+    importCvPlugin(),
+  ],
   // Relative asset paths so dist/ also opens from disk if you ever need it.
   base: './',
 });
